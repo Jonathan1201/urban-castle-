@@ -345,10 +345,13 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 }
 
+const FIREBASE_DB_URL = "https://urban-castle-catalogo-default-rtdb.firebaseio.com";
+
 async function loadCatalog(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, true);
-    products = res && res.value ? JSON.parse(res.value) : [];
+    const res = await fetch(`${FIREBASE_DB_URL}/${STORAGE_KEY}.json`);
+    const data = await res.json();
+    products = Array.isArray(data) ? data : (data ? Object.values(data) : []);
   }catch(e){
     products = [];
   }
@@ -358,8 +361,12 @@ async function loadCatalog(){
 
 async function saveCatalog(){
   try{
-    const ok = await window.storage.set(STORAGE_KEY, JSON.stringify(products), true);
-    if(!ok){ alert("No se pudo guardar el catálogo. Probá de nuevo."); }
+    const res = await fetch(`${FIREBASE_DB_URL}/${STORAGE_KEY}.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(products)
+    });
+    if(!res.ok){ alert("No se pudo guardar el catálogo. Probá de nuevo."); }
   }catch(e){
     alert("No se pudo guardar el catálogo. Probá de nuevo.");
   }
