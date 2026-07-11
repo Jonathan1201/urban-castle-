@@ -247,7 +247,7 @@
   .pin-modal input{
     width:100%; background:var(--surface-2); border:1px solid var(--line); color:var(--white);
     padding:12px; border-radius:2px; text-align:center; font-family:'Space Mono',monospace;
-    font-size:18px; letter-spacing:4px; margin-bottom:12px;
+    font-size:15px; letter-spacing:1px; margin-bottom:12px;
   }
   .pin-modal input:focus{ outline:none; border-color:var(--green); }
 
@@ -327,7 +327,7 @@
 
 <script>
 const STORAGE_KEY = "urbancastle_catalog_v1";
-const ADMIN_PIN = "1201";
+const ADMIN_PIN = "Jonny12012006";
 const WHATSAPP_NUMBER = "593983376891";
 const WHATSAPP_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.334.101 11.888c-.001 2.096.548 4.142 1.588 5.945L0 24l6.304-1.654a11.86 11.86 0 005.741 1.464h.005c6.582 0 11.94-5.334 11.943-11.89a11.821 11.821 0 00-3.473-8.471zM12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.845 9.845 0 01-1.51-5.264c.002-5.445 4.436-9.877 9.889-9.877 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.446-4.437 9.881-9.886 9.881z"/></svg>`;
 
@@ -347,13 +347,39 @@ function escapeHtml(str){
 
 const FIREBASE_DB_URL = "https://urban-castle-catalogo-default-rtdb.firebaseio.com";
 
+const LOCAL_CACHE_KEY = "urbancastle_catalog_cache_v1";
+
+function loadFromLocalCache(){
+  try{
+    const cached = localStorage.getItem(LOCAL_CACHE_KEY);
+    if(cached){
+      const data = JSON.parse(cached);
+      if(Array.isArray(data) && data.length){
+        products = data;
+        renderFilters();
+        renderGrid();
+        return true;
+      }
+    }
+  }catch(e){ /* si falla el caché, no pasa nada, seguimos con la red */ }
+  return false;
+}
+
+function saveToLocalCache(list){
+  try{
+    localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(list));
+  }catch(e){ /* si el navegador no tiene espacio, lo ignoramos */ }
+}
+
 async function loadCatalog(){
+  const hadCache = loadFromLocalCache();
   try{
     const res = await fetch(`${FIREBASE_DB_URL}/${STORAGE_KEY}.json`);
     const data = await res.json();
     products = Array.isArray(data) ? data : (data ? Object.values(data) : []);
+    saveToLocalCache(products);
   }catch(e){
-    products = [];
+    if(!hadCache) products = [];
   }
   renderFilters();
   renderGrid();
@@ -367,6 +393,7 @@ async function saveCatalog(){
       body: JSON.stringify(products)
     });
     if(!res.ok){ alert("No se pudo guardar el catálogo. Probá de nuevo."); }
+    else{ saveToLocalCache(products); }
   }catch(e){
     alert("No se pudo guardar el catálogo. Probá de nuevo.");
   }
@@ -405,9 +432,10 @@ function cardHtml(p){
   return `
   <div class="card">
     <div class="img-box" data-id="${p.id}">
-      <img src="${p.image}" alt="Diseño Urban Castle">
+      <img src="${p.image}" alt="Diseño Urban Castle" loading="lazy" decoding="async">
     </div>
     <div class="info">
+      ${p.code ? `<div class="sizes">COD: ${escapeHtml(p.code)}</div>` : ""}
       ${p.price ? `<div class="price">$${escapeHtml(p.price)}</div>` : ""}
       ${p.sizes ? `<div class="sizes">TALLA: ${escapeHtml(p.sizes)}</div>` : ""}
       ${isAdmin ? `
@@ -428,6 +456,7 @@ function openDetailModal(id){
     <div class="modal">
       <img src="${p.image}" alt="Diseño Urban Castle">
       <div class="modal-body">
+        ${p.code ? `<div class="sizes">COD: ${escapeHtml(p.code)}</div>` : ""}
         ${p.price ? `<div class="price">$${escapeHtml(p.price)}</div>` : ""}
         ${p.sizes ? `<div class="sizes">TALLA DISPONIBLE: ${escapeHtml(p.sizes)}</div>` : ""}
         <a class="modal-whatsapp" href="${buildWhatsappLink()}" target="_blank" rel="noopener noreferrer">${WHATSAPP_ICON} Consultar por WhatsApp</a>
@@ -447,7 +476,7 @@ function resizeImage(file){
     reader.onload = (e)=>{
       const img = new Image();
       img.onload = ()=>{
-        const maxW = 900;
+        const maxW = 640;
         const scale = Math.min(1, maxW / img.width);
         const w = Math.round(img.width * scale);
         const h = Math.round(img.height * scale);
@@ -455,7 +484,7 @@ function resizeImage(file){
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", 0.78));
+        resolve(canvas.toDataURL("image/jpeg", 0.62));
       };
       img.onerror = reject;
       img.src = e.target.result;
@@ -481,9 +510,15 @@ function renderAdminPanel(){
     </div>
     <div class="form-row">
       <div class="field">
+        <label>Código</label>
+        <input type="text" id="fCode" placeholder="UC-001">
+      </div>
+      <div class="field">
         <label>Precio</label>
         <input type="text" id="fPrice" placeholder="25000">
       </div>
+    </div>
+    <div class="form-row full">
       <div class="field">
         <label>Talla</label>
         <input type="text" id="fSizes" placeholder="S, M, L, XL">
@@ -518,6 +553,7 @@ function renderAdminPanel(){
   if(editingId){
     const p = products.find(x=>x.id===editingId);
     if(p){
+      document.getElementById("fCode").value = p.code || "";
       document.getElementById("fPrice").value = p.price || "";
       document.getElementById("fSizes").value = p.sizes || "";
     }
@@ -527,6 +563,7 @@ function renderAdminPanel(){
 let savedFormState = null;
 function restoreFormValues(){
   if(savedFormState){
+    document.getElementById("fCode").value = savedFormState.code;
     document.getElementById("fPrice").value = savedFormState.price;
     document.getElementById("fSizes").value = savedFormState.sizes;
   }
@@ -559,6 +596,7 @@ async function deleteProduct(id){
 
 async function saveProduct(){
   savedFormState = {
+    code: document.getElementById("fCode").value.trim(),
     price: document.getElementById("fPrice").value.trim(),
     sizes: document.getElementById("fSizes").value.trim()
   };
@@ -570,12 +608,14 @@ async function saveProduct(){
   }
   if(editingId){
     const p = products.find(x=>x.id===editingId);
+    p.code = savedFormState.code;
     p.price = savedFormState.price;
     p.sizes = savedFormState.sizes;
     p.image = pendingImageData;
   }else{
     products.unshift({
       id: "p_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
+      code: savedFormState.code,
       price: savedFormState.price,
       sizes: savedFormState.sizes,
       image: pendingImageData
@@ -596,8 +636,8 @@ function showPinModal(){
     <div class="modal pin-modal">
       <div class="modal-body">
         <h3>Modo admin</h3>
-        <p class="mono" style="color:var(--muted); font-size:12px; margin-bottom:14px;">Ingresá el PIN para poder subir, editar o borrar prendas.</p>
-        <input type="password" id="pinInput" inputmode="numeric" placeholder="••••" maxlength="8">
+        <p class="mono" style="color:var(--muted); font-size:12px; margin-bottom:14px;">Ingresá la contraseña para poder subir, editar o borrar prendas.</p>
+        <input type="password" id="pinInput" placeholder="Contraseña" maxlength="40" autocomplete="current-password">
         <div id="pinError"></div>
         <div class="form-actions">
           <button class="btn btn-primary" id="pinSubmit" style="flex:1;">Ingresar</button>
@@ -615,7 +655,7 @@ function showPinModal(){
       root.innerHTML = "";
       applyAdminState();
     }else{
-      document.getElementById("pinError").innerHTML = `<p class="error-msg">PIN incorrecto.</p>`;
+      document.getElementById("pinError").innerHTML = `<p class="error-msg">Contraseña incorrecta.</p>`;
     }
   };
   document.getElementById("pinSubmit").addEventListener("click", submit);
