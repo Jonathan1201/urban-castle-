@@ -399,18 +399,41 @@ async function saveCatalog(){
   }
 }
 
+const SIZE_OPTIONS = ["S","M","L","XL"];
+let activeSizeFilter = null;
+
+function productHasSize(p, size){
+  if(!p.sizes) return false;
+  return p.sizes.split(/[^a-zA-Z0-9]+/).map(s=>s.trim().toUpperCase()).filter(Boolean).includes(size);
+}
+
 function renderFilters(){
   const wrap = document.getElementById("filters");
-  wrap.innerHTML = "";
+  const chips = [`<button class="chip${activeSizeFilter===null?" active":""}" data-size="">Todas</button>`]
+    .concat(SIZE_OPTIONS.map(s=>
+      `<button class="chip${activeSizeFilter===s?" active":""}" data-size="${s}">${s}</button>`
+    ));
+  wrap.innerHTML = chips.join("");
+  wrap.querySelectorAll(".chip").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      activeSizeFilter = btn.dataset.size || null;
+      renderFilters();
+      renderGrid();
+    });
+  });
 }
 
 function renderGrid(){
   const container = document.getElementById("gridContainer");
-  const list = products;
+  const list = activeSizeFilter ? products.filter(p=>productHasSize(p, activeSizeFilter)) : products;
   if(list.length === 0){
-    container.innerHTML = isAdmin
-      ? `<div class="empty"><h3>Todavía no subiste diseños</h3><p>Usá el formulario de arriba para sumar tu primera prenda.</p></div>`
-      : `<div class="empty"><h3>Pronto vamos a subir nuevos diseños</h3><p>Volvé a pasar en unos días.</p></div>`;
+    if(activeSizeFilter){
+      container.innerHTML = `<div class="empty"><h3>No hay prendas en talla ${escapeHtml(activeSizeFilter)}</h3><p>Probá con otra talla o volvé a mirar más tarde.</p></div>`;
+    }else{
+      container.innerHTML = isAdmin
+        ? `<div class="empty"><h3>Todavía no subiste diseños</h3><p>Usá el formulario de arriba para sumar tu primera prenda.</p></div>`
+        : `<div class="empty"><h3>Pronto vamos a subir nuevos diseños</h3><p>Volvé a pasar en unos días.</p></div>`;
+    }
     return;
   }
   container.innerHTML = `<div class="grid">${list.map(p => cardHtml(p)).join("")}</div>`;
