@@ -231,6 +231,7 @@
     background:var(--surface); border:1px solid var(--line); border-radius:2px;
     max-width:420px; width:100%; overflow:hidden;
   }
+  .modal-img-wrap{ position:relative; }
   .modal img{ width:100%; aspect-ratio:4/5; object-fit:cover; display:block; }
   .modal .modal-body{ padding:20px; }
   .modal h3{ font-family:'Anton',sans-serif; font-size:24px; margin:0 0 8px; }
@@ -272,6 +273,60 @@
   }
   .whatsapp-fab{ -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
   .whatsapp-fab svg{ width:28px; height:28px; }
+
+  /* SOCIAL FABS (Instagram / TikTok) */
+  .social-fab{
+    position:fixed; right:22px; z-index:90;
+    width:56px; height:56px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,0.4);
+    text-decoration:none; border:2px solid #0a0a0a;
+    transition:transform .15s ease;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  }
+  @media (hover: hover){
+    .social-fab:hover{ transform:scale(1.07); }
+  }
+  .social-fab svg{ width:26px; height:26px; }
+  .instagram-fab{
+    bottom:86px;
+    background:radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+  }
+  .tiktok-fab{
+    bottom:150px;
+    background:#010101;
+  }
+
+  /* SOLD OUT OVERLAY */
+  .card .img-box{ position:relative; }
+  .sold-badge{
+    position:absolute; inset:0;
+    background:rgba(10,10,10,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:2; pointer-events:none;
+  }
+  .sold-badge span{
+    font-family:'Anton',sans-serif;
+    font-size:clamp(22px, 8vw, 30px);
+    letter-spacing:2px;
+    color:var(--pink);
+    text-transform:uppercase;
+    border:2.5px solid var(--pink);
+    padding:6px 16px;
+    transform:rotate(-8deg);
+    background:rgba(10,10,10,0.35);
+  }
+  .modal .sold-badge span{ font-size:26px; }
+  .field-checkbox{
+    display:flex; align-items:center; gap:10px;
+    background:var(--surface-2); border:1px solid var(--line);
+    padding:10px 12px; border-radius:2px; cursor:pointer;
+  }
+  .field-checkbox input{ width:18px; height:18px; accent-color:var(--pink); cursor:pointer; }
+  .field-checkbox label{
+    font-family:'Space Mono',monospace; font-size:12px; text-transform:uppercase;
+    letter-spacing:1px; color:var(--white); cursor:pointer; margin:0;
+  }
 
   .modal-whatsapp{
     display:flex; align-items:center; justify-content:center; gap:8px;
@@ -321,6 +376,14 @@
 
 <a class="whatsapp-fab" id="whatsappFab" href="https://api.whatsapp.com/send?phone=593983376891&text=Hola%21%20Te%20escribo%20por%20el%20cat%C3%A1logo%20de%20Urban%20Castle." target="_blank" rel="noopener noreferrer" aria-label="Escribinos por WhatsApp">
   <svg viewBox="0 0 24 24" fill="#0a0a0a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.334.101 11.888c-.001 2.096.548 4.142 1.588 5.945L0 24l6.304-1.654a11.86 11.86 0 005.741 1.464h.005c6.582 0 11.94-5.334 11.943-11.89a11.821 11.821 0 00-3.473-8.471zM12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.845 9.845 0 01-1.51-5.264c.002-5.445 4.436-9.877 9.889-9.877 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.446-4.437 9.881-9.886 9.881z"/></svg>
+</a>
+
+<a class="social-fab instagram-fab" id="instagramFab" href="https://www.instagram.com/urbacastle?igsh=MTcydzB4NGxzamZ1NA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Visitanos en Instagram">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465a4.9 4.9 0 011.771 1.153 4.9 4.9 0 011.153 1.771c.248.637.415 1.363.465 2.428.05 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.217 1.79-.465 2.428a4.9 4.9 0 01-1.153 1.771 4.9 4.9 0 01-1.771 1.153c-.637.248-1.363.415-2.428.465-1.066.05-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.217-2.428-.465a4.9 4.9 0 01-1.771-1.153 4.9 4.9 0 01-1.153-1.771c-.248-.637-.415-1.363-.465-2.428C2.01 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.065.217-1.79.465-2.428a4.9 4.9 0 011.153-1.771A4.9 4.9 0 015.45 2.526c.637-.248 1.363-.415 2.428-.465C8.944 2.01 9.283 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10zm0 8.25a3.25 3.25 0 110-6.5 3.25 3.25 0 010 6.5zm5.375-8.475a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4z" fill="#ffffff"/></svg>
+</a>
+
+<a class="social-fab tiktok-fab" id="tiktokFab" href="https://www.tiktok.com/@jonic_2006?_r=1&_t=ZS-97yfSupRZe0" target="_blank" rel="noopener noreferrer" aria-label="Visitanos en TikTok">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.5 2h-3.2v13.3a2.9 2.9 0 11-2.05-2.77V9.35a6.05 6.05 0 105.25 6v-6.62a7.7 7.7 0 004.5 1.45V6.98a4.4 4.4 0 01-4.5-4.4V2z" fill="#ffffff"/></svg>
 </a>
 
 <div id="modalRoot"></div>
@@ -456,6 +519,7 @@ function cardHtml(p){
   <div class="card">
     <div class="img-box" data-id="${p.id}">
       <img src="${p.image}" alt="Diseño Urban Castle" loading="lazy" decoding="async">
+      ${p.sold ? `<div class="sold-badge"><span>Agotado</span></div>` : ""}
     </div>
     <div class="info">
       ${p.code ? `<div class="sizes">COD: ${escapeHtml(p.code)}</div>` : ""}
@@ -477,7 +541,10 @@ function openDetailModal(id){
   root.innerHTML = `
   <div class="modal-overlay" id="detailOverlay">
     <div class="modal">
-      <img src="${p.image}" alt="Diseño Urban Castle">
+      <div class="modal-img-wrap">
+        <img src="${p.image}" alt="Diseño Urban Castle">
+        ${p.sold ? `<div class="sold-badge"><span>Agotado</span></div>` : ""}
+      </div>
       <div class="modal-body">
         ${p.code ? `<div class="sizes">COD: ${escapeHtml(p.code)}</div>` : ""}
         ${p.price ? `<div class="price">$${escapeHtml(p.price)}</div>` : ""}
@@ -547,6 +614,12 @@ function renderAdminPanel(){
         <input type="text" id="fSizes" placeholder="S, M, L, XL">
       </div>
     </div>
+    <div class="form-row full">
+      <div class="field-checkbox" id="soldCheckWrap">
+        <input type="checkbox" id="fSold">
+        <label for="fSold">Marcar como AGOTADO</label>
+      </div>
+    </div>
     <div id="formError"></div>
     <div class="form-actions">
       <button class="btn btn-primary" id="saveProductBtn">${editingId ? "Guardar cambios" : "Publicar prenda"}</button>
@@ -579,6 +652,7 @@ function renderAdminPanel(){
       document.getElementById("fCode").value = p.code || "";
       document.getElementById("fPrice").value = p.price || "";
       document.getElementById("fSizes").value = p.sizes || "";
+      document.getElementById("fSold").checked = !!p.sold;
     }
   }
 }
@@ -589,6 +663,7 @@ function restoreFormValues(){
     document.getElementById("fCode").value = savedFormState.code;
     document.getElementById("fPrice").value = savedFormState.price;
     document.getElementById("fSizes").value = savedFormState.sizes;
+    document.getElementById("fSold").checked = !!savedFormState.sold;
   }
 }
 
@@ -621,7 +696,8 @@ async function saveProduct(){
   savedFormState = {
     code: document.getElementById("fCode").value.trim(),
     price: document.getElementById("fPrice").value.trim(),
-    sizes: document.getElementById("fSizes").value.trim()
+    sizes: document.getElementById("fSizes").value.trim(),
+    sold: document.getElementById("fSold").checked
   };
   const errEl = document.getElementById("formError");
   errEl.innerHTML = "";
@@ -634,6 +710,7 @@ async function saveProduct(){
     p.code = savedFormState.code;
     p.price = savedFormState.price;
     p.sizes = savedFormState.sizes;
+    p.sold = savedFormState.sold;
     p.image = pendingImageData;
   }else{
     products.unshift({
@@ -641,6 +718,7 @@ async function saveProduct(){
       code: savedFormState.code,
       price: savedFormState.price,
       sizes: savedFormState.sizes,
+      sold: savedFormState.sold,
       image: pendingImageData
     });
   }
