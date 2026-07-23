@@ -270,6 +270,15 @@
   }
   .modal-close:hover{ border-color:var(--green); color:var(--green); }
 
+  .flip-btn{
+    position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+    background:rgba(10,10,10,0.82); color:var(--white); border:1.5px solid var(--green);
+    padding:8px 16px; border-radius:20px; cursor:pointer;
+    font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:1px; font-size:11px;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  }
+  .flip-btn:hover{ background:var(--green); color:#0a0a0a; }
+
   .pin-modal .modal-body{ text-align:center; }
   .pin-modal input{
     width:100%; background:var(--surface-2); border:1px solid var(--line); color:var(--white);
@@ -464,6 +473,7 @@ let isLoyalty = false;
 let activeCategory = "Todas";
 let editingId = null;
 let pendingImageData = null;
+let pendingImageDataBack = null;
 const CATEGORY_OPTIONS = ["Bividis", "Camisetas mujer", "Crop top mujer", "Unisex"];
 
 function escapeHtml(str){
@@ -645,16 +655,20 @@ function cardHtml(p){
   </div>`;
 }
 
+let detailShowingBack = false;
+
 function openDetailModal(id){
   const p = products.find(x => x.id === id);
   if(!p) return;
+  detailShowingBack = false;
   const root = document.getElementById("modalRoot");
   root.innerHTML = `
   <div class="modal-overlay" id="detailOverlay">
     <div class="modal">
       <div class="modal-img-wrap">
-        <img src="${p.image}" alt="Diseño Urban Castle">
+        <img src="${p.image}" alt="Diseño Urban Castle" id="detailImg">
         ${p.sold ? `<div class="sold-badge"><span>Agotado</span></div>` : ""}
+        ${p.imageBack ? `<button class="flip-btn" id="flipBtn">Ver parte trasera</button>` : ""}
       </div>
       <div class="modal-body">
         ${p.code ? `<div class="sizes">COD: ${escapeHtml(p.code)}</div>` : ""}
@@ -665,6 +679,14 @@ function openDetailModal(id){
       </div>
     </div>
   </div>`;
+  const flipBtn = document.getElementById("flipBtn");
+  if(flipBtn){
+    flipBtn.addEventListener("click", ()=>{
+      detailShowingBack = !detailShowingBack;
+      document.getElementById("detailImg").src = detailShowingBack ? p.imageBack : p.image;
+      flipBtn.textContent = detailShowingBack ? "Ver parte delantera" : "Ver parte trasera";
+    });
+  }
   document.getElementById("detailOverlay").addEventListener("click", (e)=>{
     if(e.target.id === "detailOverlay") root.innerHTML = "";
   });
@@ -702,11 +724,21 @@ function renderAdminPanel(){
     <h2>${editingId ? "Editar prenda" : "Sumar nueva prenda"}</h2>
     <div class="form-row full">
       <div class="field">
-        <label>Foto</label>
+        <label>Foto (parte delantera)</label>
         <div class="upload-box ${pendingImageData ? 'has-img':''}" id="uploadBox">
           ${pendingImageData ? `<img src="${pendingImageData}">` : `<div class="upload-hint">Tocá para elegir una foto<br>desde tu celular o computadora</div>`}
           <input type="file" accept="image/*" id="fileInput">
         </div>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="field">
+        <label>Foto (parte trasera, opcional)</label>
+        <div class="upload-box ${pendingImageDataBack ? 'has-img':''}" id="uploadBoxBack">
+          ${pendingImageDataBack ? `<img src="${pendingImageDataBack}">` : `<div class="upload-hint">Tocá para elegir una foto<br>de la espalda de la prenda</div>`}
+          <input type="file" accept="image/*" id="fileInputBack">
+        </div>
+        ${pendingImageDataBack ? `<button type="button" class="icon-btn danger" id="removeBackBtn" style="margin-top:8px;">Quitar foto trasera</button>` : ""}
       </div>
     </div>
     <div class="form-row">
@@ -762,6 +794,27 @@ function renderAdminPanel(){
     }
   });
 
+  const uploadBoxBack = document.getElementById("uploadBoxBack");
+  const fileInputBack = document.getElementById("fileInputBack");
+  uploadBoxBack.addEventListener("click", ()=> fileInputBack.click());
+  fileInputBack.addEventListener("change", async ()=>{
+    const file = fileInputBack.files[0];
+    if(!file) return;
+    try{
+      pendingImageDataBack = await resizeImage(file);
+      renderAdminPanel();
+      restoreFormValues();
+    }catch(e){
+      document.getElementById("formError").innerHTML = `<p class="error-msg">No se pudo procesar la imagen trasera. Probá con otra foto.</p>`;
+    }
+  });
+  const removeBackBtn = document.getElementById("removeBackBtn");
+  if(removeBackBtn) removeBackBtn.addEventListener("click", ()=>{
+    pendingImageDataBack = null;
+    renderAdminPanel();
+    restoreFormValues();
+  });
+
   document.getElementById("saveProductBtn").addEventListener("click", saveProduct);
   const cancelBtn = document.getElementById("cancelEditBtn");
   if(cancelBtn) cancelBtn.addEventListener("click", cancelEdit);
@@ -793,6 +846,7 @@ function startEdit(id){
   editingId = id;
   const p = products.find(x=>x.id===id);
   pendingImageData = p ? p.image : null;
+  pendingImageDataBack = p ? (p.imageBack || null) : null;
   renderAdminPanel();
   window.scrollTo({top:0, behavior:"smooth"});
 }
@@ -800,6 +854,7 @@ function startEdit(id){
 function cancelEdit(){
   editingId = null;
   pendingImageData = null;
+  pendingImageDataBack = null;
   savedFormState = null;
   renderAdminPanel();
 }
@@ -837,6 +892,7 @@ async function saveProduct(){
     p.category = savedFormState.category;
     p.sold = savedFormState.sold;
     p.image = pendingImageData;
+    if(pendingImageDataBack){ p.imageBack = pendingImageDataBack; } else { delete p.imageBack; }
   }else{
     products.unshift({
       id: "p_" + Date.now() + "_" + Math.random().toString(36).slice(2,7),
@@ -845,12 +901,14 @@ async function saveProduct(){
       sizes: savedFormState.sizes,
       category: savedFormState.category,
       sold: savedFormState.sold,
-      image: pendingImageData
+      image: pendingImageData,
+      imageBack: pendingImageDataBack || undefined
     });
   }
   await saveCatalog();
   editingId = null;
   pendingImageData = null;
+  pendingImageDataBack = null;
   savedFormState = null;
   renderAdminPanel();
   renderGrid();
@@ -909,6 +967,7 @@ function applyAdminState(){
     heroSub.textContent = "Los diseños disponibles ahora. Tocá una prenda para ver el detalle.";
     editingId = null;
     pendingImageData = null;
+    pendingImageDataBack = null;
   }
   renderGrid();
 }
