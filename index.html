@@ -166,6 +166,10 @@
   .card .sizes{
     font-family:'Space Mono',monospace; color:var(--muted); font-size:11px; letter-spacing:1px;
   }
+  .stock-mark{
+    font-family:'Anton',sans-serif; color:var(--muted); font-size:11px; letter-spacing:1.5px;
+    margin-top:4px; opacity:0.6;
+  }
   .card .admin-actions{
     display:flex; gap:8px; margin-top:12px;
   }
@@ -490,6 +494,20 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 }
 
+function toRoman(num){
+  num = parseInt(num, 10);
+  if(!num || num <= 0) return "";
+  const map = [[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];
+  let result = "";
+  for(const [val, sym] of map){
+    while(num >= val){
+      result += sym;
+      num -= val;
+    }
+  }
+  return result;
+}
+
 const FIREBASE_DB_URL = "https://urban-castle-catalogo-default-rtdb.firebaseio.com";
 const CLIENTS_KEY = "urbancastle_clients_v1";
 let clients = [];
@@ -656,6 +674,7 @@ function cardHtml(p){
       ${p.code ? `<div class="sizes">COD: ${escapeHtml(p.code)}</div>` : ""}
       ${p.price ? `<div class="price">$${escapeHtml(p.price)}</div>` : ""}
       ${p.sizes ? `<div class="sizes">TALLA: ${escapeHtml(p.sizes)}</div>` : ""}
+      ${p.stock ? `<div class="stock-mark">${toRoman(p.stock)}</div>` : ""}
       ${isAdmin ? `
       <div class="admin-actions">
         <button class="icon-btn edit-btn" data-id="${p.id}">Editar</button>
@@ -684,6 +703,7 @@ function openDetailModal(id){
         ${p.code ? `<div class="sizes">COD: ${escapeHtml(p.code)}</div>` : ""}
         ${p.price ? `<div class="price">$${escapeHtml(p.price)}</div>` : ""}
         ${p.sizes ? `<div class="sizes">TALLA DISPONIBLE: ${escapeHtml(p.sizes)}</div>` : ""}
+        ${p.stock ? `<div class="stock-mark">${toRoman(p.stock)}</div>` : ""}
         <a class="modal-whatsapp" href="${buildWhatsappLink()}" target="_blank" rel="noopener noreferrer">${WHATSAPP_ICON} Consultar por WhatsApp</a>
         <button class="modal-close" id="closeDetail">Cerrar</button>
       </div>
@@ -763,6 +783,12 @@ function renderAdminPanel(){
     </div>
     <div class="form-row full">
       <div class="field">
+        <label>Cantidad de camisas (uso interno, para vos)</label>
+        <input type="number" id="fStock" placeholder="Ej: 2" min="0">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="field">
         <label>Categoría</label>
         <select id="fCategory">
           <option value="">Sin categoría</option>
@@ -836,6 +862,7 @@ function renderAdminPanel(){
       document.getElementById("fPrice").value = p.price || "";
       document.getElementById("fSizes").value = p.sizes || "";
       document.getElementById("fCategory").value = p.category || "";
+      document.getElementById("fStock").value = (p.stock !== undefined && p.stock !== null) ? p.stock : "";
       document.getElementById("fSold").checked = !!p.sold;
     }
   }
@@ -848,6 +875,7 @@ function restoreFormValues(){
     document.getElementById("fPrice").value = savedFormState.price;
     document.getElementById("fSizes").value = savedFormState.sizes;
     document.getElementById("fCategory").value = savedFormState.category || "";
+    document.getElementById("fStock").value = (savedFormState.stock !== undefined && savedFormState.stock !== null) ? savedFormState.stock : "";
     document.getElementById("fSold").checked = !!savedFormState.sold;
   }
 }
@@ -881,11 +909,13 @@ async function deleteProduct(id){
 }
 
 async function saveProduct(){
+  const stockRaw = document.getElementById("fStock").value.trim();
   savedFormState = {
     code: document.getElementById("fCode").value.trim(),
     price: document.getElementById("fPrice").value.trim(),
     sizes: document.getElementById("fSizes").value.trim(),
     category: document.getElementById("fCategory").value,
+    stock: stockRaw === "" ? null : parseInt(stockRaw, 10),
     sold: document.getElementById("fSold").checked
   };
   const errEl = document.getElementById("formError");
@@ -900,6 +930,7 @@ async function saveProduct(){
     p.price = savedFormState.price;
     p.sizes = savedFormState.sizes;
     p.category = savedFormState.category;
+    p.stock = savedFormState.stock;
     p.sold = savedFormState.sold;
     p.image = pendingImageData;
     if(pendingImageDataBack){ p.imageBack = pendingImageDataBack; } else { delete p.imageBack; }
@@ -910,6 +941,7 @@ async function saveProduct(){
       price: savedFormState.price,
       sizes: savedFormState.sizes,
       category: savedFormState.category,
+      stock: savedFormState.stock,
       sold: savedFormState.sold,
       image: pendingImageData,
       imageBack: pendingImageDataBack || undefined
