@@ -141,16 +141,21 @@
   }
   .card .img-box img{ width:100%; height:100%; object-fit:cover; }
   .card{ position:relative; overflow:visible; }
-  .cat-tag-row{ display:flex; justify-content:flex-end; position:relative; z-index:2; padding:10px 10px 0; }
+  .cat-tag-row{ display:flex; justify-content:flex-end; position:relative; z-index:2; padding:10px 10px 0; margin-bottom:12px; }
   .card .cat-tag{
-    display:inline-flex; align-items:center; gap:5px;
-    background:rgba(10,10,10,0.94);
-    border:1.5px solid var(--white);
-    color:var(--white);
+    display:inline-flex; align-items:center; gap:6px;
+    background:
+      linear-gradient(#0a0a0a, #0a0a0a) padding-box,
+      linear-gradient(120deg, var(--pink), var(--green)) border-box;
+    border:1.5px solid transparent;
     font-family:'Space Mono',monospace; font-size:10px; text-transform:uppercase;
     letter-spacing:1.2px; font-weight:700;
     padding:6px 12px; border-radius:20px;
     box-shadow:0 4px 12px rgba(0,0,0,0.45);
+  }
+  .card .cat-tag .tag-text{
+    background:linear-gradient(120deg, var(--pink), var(--green));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   .card .cat-tag svg{ width:11px; height:11px; flex-shrink:0; }
   .card .info{ padding:14px 14px 16px; }
@@ -662,7 +667,7 @@ function renderGrid(){
 function cardHtml(p){
   return `
   <div class="card">
-    ${p.category ? `<div class="cat-tag-row"><div class="cat-tag"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.59 13.41L11 3.83A2 2 0 009.53 3.2L4 3a1 1 0 00-1 1l.2 5.53a2 2 0 00.63 1.44l9.6 9.6a2 2 0 002.83 0l4.34-4.34a2 2 0 000-2.82z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" r="1.2" fill="currentColor"/></svg>${escapeHtml(p.category)}</div></div>` : ""}
+    ${p.category ? `<div class="cat-tag-row"><div class="cat-tag"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="tagGrad" x1="0" y1="0" x2="24" y2="24"><stop offset="0" style="stop-color:var(--pink)"/><stop offset="1" style="stop-color:var(--green)"/></linearGradient></defs><path d="M20.59 13.41L11 3.83A2 2 0 009.53 3.2L4 3a1 1 0 00-1 1l.2 5.53a2 2 0 00.63 1.44l9.6 9.6a2 2 0 002.83 0l4.34-4.34a2 2 0 000-2.82z" stroke="url(#tagGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" r="1.2" fill="url(#tagGrad)"/></svg><span class="tag-text">${escapeHtml(p.category)}</span></div></div>` : ""}
     <div class="img-box" data-id="${p.id}">
       <img src="${p.image}" alt="Diseño Urban Castle" loading="lazy" decoding="async">
       ${p.sold ? `<div class="sold-badge"><span>Agotado</span></div>` : ""}
